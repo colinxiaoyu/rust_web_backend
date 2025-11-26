@@ -14,6 +14,7 @@ tracing = "0.1"
 dotenvy = "0.15"
 bcrypt = "0.14"
 tower = "0.5.2"
+once_cell = "1.21.3"
 
 [lib]
 name ="web_backend"

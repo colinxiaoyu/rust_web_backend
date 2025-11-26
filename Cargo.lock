@@ -2173,6 +2173,7 @@ dependencies = [
  "bcrypt",
  "dotenvy",
  "jsonwebtoken",
+ "once_cell",
  "serde",
  "serde_json",
  "sqlx",

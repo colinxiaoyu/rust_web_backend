@@ -4,16 +4,16 @@ use axum::{
 };
 use serde_json::json;
 use tower::ServiceExt;
-use web_backend::{app::create_app, db::connect_db};
+use web_backend::{app::create_app, db::get_db_pool};
 
 #[tokio::test]
 async fn test_register_http() {
-    let db = connect_db().await;
-    let app = create_app(db);
+    let _db = get_db_pool();
+    let app = create_app();
 
     let payload = json!({
       "username": "http_test1",
-        "password": "123456"
+      "password": "123456"
     });
 
     let request = Request::post("/register")
