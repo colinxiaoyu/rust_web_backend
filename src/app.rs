@@ -10,6 +10,7 @@ pub fn create_app() -> Router {
     Router::new()
         .route("/", get(root))
         .route("/register", post(user::register))
+        .route("/login", post(user::login))
 }
 
 async fn root() -> &'static str {
