@@ -4,13 +4,13 @@ use axum::{
 };
 use sqlx::PgPool;
 
-use crate::{db::get_db_pool, routes::user};
+use crate::routes::user;
 
-pub fn create_app() -> Router {
+pub fn create_app(pool: PgPool) -> Router {
     Router::new()
         .route("/", get(root))
-        .route("/register", post(user::register))
         .route("/login", post(user::login))
+        .with_state(pool)
 }
 
 async fn root() -> &'static str {

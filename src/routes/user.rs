@@ -1,21 +1,20 @@
-use axum::{Json, http::StatusCode, response::IntoResponse};
+use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
+use sqlx::PgPool;
 
 use crate::{
-    db::get_db_pool,
     models::user::{LoginInput, RegisterInput},
-    services::user_service,
+    services::user_service::{self, login_service},
     utils::hash::hash_password,
 };
 
-pub async fn register(Json(payload): Json<RegisterInput>) -> impl IntoResponse {
-    let db = get_db_pool();
+pub async fn register(db: PgPool, Json(payload): Json<RegisterInput>) -> impl IntoResponse {
     let password_hash: String = hash_password(&payload.password);
     let result = sqlx::query!(
         "INSERT INTO users (username, password_hash) VALUES ($1, $2)",
         payload.username,
         password_hash
     )
-    .execute(db)
+    .execute(&db)
     .await;
 
     match result {
@@ -24,8 +23,11 @@ pub async fn register(Json(payload): Json<RegisterInput>) -> impl IntoResponse {
     }
 }
 
-pub async fn login(Json(payload): Json<LoginInput>) -> impl IntoResponse {
-    match user_service::login(&payload).await {
+pub async fn login(
+    State(pool): State<PgPool>,
+    Json(payload): Json<LoginInput>,
+) -> impl IntoResponse {
+    match login_service(&payload, &pool).await {
         Ok(record) => (StatusCode::OK, Json(record)).into_response(),
         Err(err) => match err {
             user_service::LoginError::InvalidCredentials => {
