@@ -3,7 +3,8 @@ use axum::{Json, http::StatusCode, response::IntoResponse};
 use crate::{
     db::get_db_pool,
     models::user::{LoginInput, RegisterInput},
-    utils::hash::{hash_password, verify_password},
+    services::user_service,
+    utils::hash::hash_password,
 };
 
 pub async fn register(Json(payload): Json<RegisterInput>) -> impl IntoResponse {
@@ -24,23 +25,15 @@ pub async fn register(Json(payload): Json<RegisterInput>) -> impl IntoResponse {
 }
 
 pub async fn login(Json(payload): Json<LoginInput>) -> impl IntoResponse {
-    let db = get_db_pool();
-
-    let result = sqlx::query!(
-        "SELECT password_hash FROM users WHERE username = $1",
-        payload.username
-    )
-    .fetch_one(db)
-    .await;
-
-    match result {
-        Ok(record) => {
-            if verify_password(&payload.password, &record.password_hash) {
-                (StatusCode::OK, "login successful").into_response()
-            } else {
-                (StatusCode::UNAUTHORIZED, "invalid credentials").into_response()
+    match user_service::login(&payload).await {
+        Ok(record) => (StatusCode::OK, Json(record)).into_response(),
+        Err(err) => match err {
+            user_service::LoginError::InvalidCredentials => {
+                (StatusCode::UNAUTHORIZED, "invalid username or password").into_response()
             }
-        }
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, format!("Error: {}", e)).into_response(),
+            user_service::LoginError::ServerError => {
+                (StatusCode::INTERNAL_SERVER_ERROR, "server error").into_response()
+            }
+        },
     }
 }

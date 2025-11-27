@@ -4,10 +4,7 @@ use axum::{
 };
 use serde_json::json;
 use tower::ServiceExt;
-use web_backend::{
-    app::create_app,
-    db::{get_db_pool, init_db_pool},
-};
+use web_backend::{app::create_app, db::init_db_pool};
 
 #[tokio::test]
 async fn test_register_http() {

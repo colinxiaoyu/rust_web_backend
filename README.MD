@@ -33,6 +33,7 @@
 
 src/
 ├─ main.rs # 程序入口，启动服务器
+├─ lib.rs # 模块化
 ├─ routes/ # 路由处理器
 │ ├─ mod.rs
 │ ├─ user.rs # 用户注册、登录
@@ -47,6 +48,9 @@ src/
 │ └─ task.rs
 ├─ db/ # 数据库连接、操作
 │ └─ mod.rs
+└─ repositories/
+│   ├─ mod.rs
+│   └─ user_repo.rs
 └─ utils/ # 工具函数
 ├─ jwt.rs
 └─ hash.rs # 密码加密
