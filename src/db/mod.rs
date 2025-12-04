@@ -1,9 +1,11 @@
 use std::env;
 
+use deadpool_redis::{Config, Pool, Runtime};
 use dotenvy::dotenv;
 use sqlx::{PgPool, postgres::PgPoolOptions};
 
 pub type DbPool = PgPool;
+type RedisPool = Pool;
 
 pub async fn init_db_pool() -> PgPool {
     dotenv().ok();
@@ -15,4 +17,11 @@ pub async fn init_db_pool() -> PgPool {
         .expect("Failed to connect to database");
 
     pool
+}
+
+pub fn init_redis_pool() -> RedisPool {
+    dotenv().ok();
+    let redis_url = env::var("REDIS_URL").expect("REDIS_URL must be set");
+    let cfg = Config::from_url(redis_url);
+    cfg.create_pool(Some(Runtime::Tokio1)).unwrap()
 }
