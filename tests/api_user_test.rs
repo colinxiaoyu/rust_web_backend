@@ -25,7 +25,7 @@ async fn test_login_http() {
         "password": "123456"
     });
 
-    let request = Request::post("/api/login") // 注意路径！
+    let request = Request::post("/api/login")
         .header("content-type", "application/json")
         .body(Body::from(payload.to_string()))
         .unwrap();

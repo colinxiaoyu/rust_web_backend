@@ -2,11 +2,9 @@ pub struct RequiredPermission(pub &'static str);
 
 use crate::services::auth_service::{login, logout_all, refresh_tokens, register};
 use crate::state::AppState;
-use axum::body;
+use axum::Json;
 use axum::extract::State;
-use axum::http::StatusCode;
-use axum::response::{IntoResponse, Response};
-use axum::{Json, extract::Extension};
+use axum::response::IntoResponse;
 use serde::Deserialize;
 use serde_json::json;
 
@@ -19,17 +17,15 @@ pub struct LoginInput {
 pub async fn login_handler(
     State(state): State<AppState>,
     Json(payload): Json<LoginInput>,
-) -> Result<Json<serde_json::Value>, (StatusCode, Json<serde_json::Value>)> {
+) -> impl IntoResponse {
     match login(&payload.username, &payload.password, &state).await {
-        Ok(r) => Ok(Json(json!({
+        Ok(r) => Json(json!({
             "access_token": r.access_token,
             "refresh_token": r.refresh_token,
             "user": r.user
-        }))),
-        Err(e) => Err((
-            StatusCode::UNAUTHORIZED,
-            Json(json!({"error": format!("{}", e)})),
-        )),
+        }))
+        .into_response(),
+        Err(e) => Json(json!({ "error": e.to_string() })).into_response(),
     }
 }
 

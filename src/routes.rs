@@ -6,10 +6,11 @@ use crate::state::AppState;
 use axum::{Router, routing::post};
 
 pub fn create_router(state: AppState) -> Router {
-    let public_router = Router::new().route("/api/register", post(register_handler));
+    let public_router = Router::new()
+        .route("/api/register", post(register_handler))
+        .route("/api/login", post(login_handler));
 
     let protected_router = Router::new()
-        .route("/api/login", post(login_handler))
         .route("/api/refresh", post(refresh_handler))
         .layer(AuthLayer);
 
