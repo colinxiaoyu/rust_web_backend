@@ -1,6 +1,6 @@
 pub struct RequiredPermission(pub &'static str);
 
-use crate::services::auth_service::{login, logout_all, refresh_tokens};
+use crate::services::auth_service::{login, logout_all, refresh_tokens, register};
 use crate::state::AppState;
 use axum::body;
 use axum::extract::State;
@@ -64,6 +64,22 @@ pub async fn logout_handler(
 ) -> impl IntoResponse {
     match logout_all(payload.user_id, &state).await {
         Ok(_) => Json(json!({"ok": true})).into_response(),
+        Err(e) => Json(json!({"error": format!("{}", e)})).into_response(),
+    }
+}
+
+#[derive(Deserialize)]
+pub struct RegisterInput {
+    pub username: String,
+    pub password: String,
+}
+
+pub async fn register_handler(
+    State(state): State<AppState>,
+    Json(payload): Json<RegisterInput>,
+) -> impl IntoResponse {
+    match register(&payload.username, &payload.password, &state).await {
+        Ok(id) => Json(json!({"ok": true,"id":id})).into_response(),
         Err(e) => Json(json!({"error": format!("{}", e)})).into_response(),
     }
 }

@@ -1,10 +1,15 @@
 use crate::{
     auth::jwt::{encode_claims, make_claims},
-    repositories::user_repo::{get_user_by_id, get_user_by_username},
+    repositories::user_repo::{
+        exist_by_username, get_user_by_id, get_user_by_username, register_by_username_password_hash,
+    },
     state::AppState,
-    utils::redis_keys::{blacklist_key, refresh_key, session_key, user_sessions_key},
+    utils::{
+        hash::hash_password,
+        redis_keys::{blacklist_key, refresh_key, session_key, user_sessions_key},
+    },
 };
-use anyhow::Result;
+use anyhow::{Ok, Result, bail};
 use bcrypt::verify;
 use deadpool_redis::redis::AsyncCommands;
 
@@ -161,4 +166,19 @@ pub async fn logout_all(user_id: i64, state: &AppState) -> Result<()> {
     }
     let _: () = conn.del(&user_s_key).await?;
     Ok(())
+}
+
+pub async fn register(username: &str, password: &str, state: &AppState) -> Result<i64> {
+    let exists = exist_by_username(&state.db, username)
+        .await?
+        .unwrap_or(false);
+    if exists {
+        bail!("username already exists")
+    }
+
+    let password_hash = hash_password(password);
+    let id: i64 = register_by_username_password_hash(&state.db, username, &password_hash)
+        .await?
+        .unwrap_or(0);
+    Ok(id)
 }
